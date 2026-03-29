@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#0D1117">
+    <TextView android:text="🖱️" android:textSize="64sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16dp"/>
+    <TextView android:text="Trackpad Cursor" android:textSize="28sp" android:textColor="#FFFFFF" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
+    <TextView android:id="@+id/tvStatus" android:textSize="15sp" android:textColor="#AAAAAA" android:gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="32dp" android:text="Checking service..."/>
+    <Button android:id="@+id/btnAccessibility" android:text="Enable Accessibility Service" android:textSize="16sp" android:layout_width="match_parent" android:layout_height="56dp" android:backgroundTint="#1976D2" android:layout_marginBottom="32dp"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#CCCCCC" android:textSize="14sp" android:lineSpacingExtra="6dp" android:text="• 1 finger move → move cursor\n• 1 finger tap → left click\n• Long press + move → drag\n• 2 finger tap → left click\n• 2 finger double-tap → right click\n• Hold Vol Down 3 sec → toggle ON/OFF"/>
+</LinearLayout>

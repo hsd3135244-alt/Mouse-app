@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Trackpad Cursor</string>
+    <string name="service_label">Trackpad Cursor Service</string>
+    <string name="accessibility_desc">Turns your full screen into a trackpad</string>
+</resources>

@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.trackpad.cursor.app-debug-31:/layout_activity_main.xml.flat",
+        "source": "com.trackpad.cursor.app-main-33:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.trackpad.cursor.app-debug-31:/xml_accessibility_config.xml.flat",
+        "source": "com.trackpad.cursor.app-main-33:/xml/accessibility_config.xml"
+    }
+]
