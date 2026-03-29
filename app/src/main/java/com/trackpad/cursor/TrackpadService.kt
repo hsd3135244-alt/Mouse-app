@@ -11,6 +11,7 @@ class TrackpadService : AccessibilityService() {
     private lateinit var wm: WindowManager
     private var cursorView: View? = null
     private var overlayView: View? = null
+    private var toggleBtnView: View? = null
     private var trackpadOn = false
     private var curX = 0f; private var curY = 0f
     private var screenW = 0; private var screenH = 0
@@ -27,14 +28,34 @@ class TrackpadService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        refreshScreen(); curX = screenW / 2f; curY = screenH / 2f; addCursor()
+        refreshScreen(); curX = screenW / 2f; curY = screenH / 2f
+        addCursor(); addToggleButton()
     }
-    override fun onDestroy() { handler.removeCallbacksAndMessages(null); removeOverlay(); cursorView?.let { wm.removeView(it) }; super.onDestroy() }
+    override fun onDestroy() { handler.removeCallbacksAndMessages(null); removeOverlay(); cursorView?.let { wm.removeView(it) }; toggleBtnView?.let { wm.removeView(it) }; super.onDestroy() }
     override fun onInterrupt() { removeOverlay() }
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-    override fun onKeyEvent(event: KeyEvent?): Boolean {
-        if (event?.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 8) { toggleTrackpad(); vibrate(120); return true }
-        return false
+    private fun addToggleButton() {
+        toggleBtnView = object : View(this@TrackpadService) {
+            private val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(220,30,100,255); style = Paint.Style.FILL }
+            private val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; textSize = 28f; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
+            override fun onDraw(canvas: Canvas) {
+                canvas.drawRoundRect(0f,0f,width.toFloat(),height.toFloat(),24f,24f,p)
+                val label = if (trackpadOn) "PAD ON" else "PAD OFF"
+                canvas.drawText(label, width/2f, height/2f + tp.textSize/3f, tp)
+            }
+            override fun onTouchEvent(event: MotionEvent): Boolean {
+                if (event.action == MotionEvent.ACTION_UP) { toggleTrackpad(); invalidate() }
+                return true
+            }
+        }
+        val p = WindowManager.LayoutParams(200, 80,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT).apply {
+            gravity = Gravity.BOTTOM or Gravity.END
+            x = 20; y = 20
+        }
+        wm.addView(toggleBtnView, p)
     }
     private fun addCursor() {
         cursorView = object : View(this) {
@@ -56,13 +77,7 @@ class TrackpadService : AccessibilityService() {
         if (trackpadOn) return; trackpadOn = true; refreshScreen()
         overlayView = object : View(this@TrackpadService) {
             private val bp = Paint().apply { color = Color.argb(25,30,140,255); style = Paint.Style.FILL }
-            private val cp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(180,30,30,30); style = Paint.Style.FILL }
-            private val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; textSize = 36f; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
-            override fun onDraw(canvas: Canvas) {
-                canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),bp)
-                val cx = width - toggleZonePx/2f; val cy = height - toggleZonePx/2f
-                canvas.drawCircle(cx,cy,toggleZonePx/2f-6f,cp); canvas.drawText("X",cx,cy+tp.textSize/3f,tp)
-            }
+            override fun onDraw(canvas: Canvas) { canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),bp) }
             override fun onTouchEvent(event: MotionEvent): Boolean { handleTouch(event); return true }
         }
         wm.addView(overlayView, overlayParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT))
@@ -70,7 +85,6 @@ class TrackpadService : AccessibilityService() {
     private fun removeOverlay() { if (!trackpadOn) return; trackpadOn = false; handler.removeCallbacks(longPressRunnable); overlayView?.let { wm.removeView(it) }; overlayView = null }
     private fun handleTouch(event: MotionEvent) {
         val x = event.x; val y = event.y
-        val w = overlayView?.width?.toFloat() ?: screenW.toFloat(); val h = overlayView?.height?.toFloat() ?: screenH.toFloat()
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> { startX=x; startY=y; lastX=x; lastY=y; startTime=System.currentTimeMillis(); longPressed=false; handler.postDelayed(longPressRunnable,580L) }
             MotionEvent.ACTION_POINTER_DOWN -> { handler.removeCallbacks(longPressRunnable) }
@@ -78,7 +92,6 @@ class TrackpadService : AccessibilityService() {
             MotionEvent.ACTION_UP -> {
                 handler.removeCallbacks(longPressRunnable)
                 val dt=System.currentTimeMillis()-startTime; val moved=hypot(x-startX,y-startY)
-                if (x>w-toggleZonePx && y>h-toggleZonePx && moved<18f) { removeOverlay(); return }
                 when { longPressed && moved>18f -> performDrag(dragFromX,dragFromY,curX,curY); longPressed -> performLongPress(); dt<220L && moved<18f -> performTap() }
                 longPressed=false
             }
